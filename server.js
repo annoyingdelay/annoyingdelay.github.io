@@ -5,29 +5,34 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
+// Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// API route to return live system stats
 app.get('/api/stats', async (req, res) => {
     try {
-        const cpu = await si.currentLoad();
-        const mem = await si.mem();
-        const gpuData = await si.graphics();
+        const [cpuLoad, mem, gpu] = await Promise.all([
+            si.currentLoad(),
+            si.mem(),
+            si.graphics()
+        ]);
 
-        let gpuLoad = 0;
-        if (gpuData.controllers && gpuData.controllers.length > 0) {
-            gpuLoad = gpuData.controllers[0].utilizationGpu || 0;
-        }
+        const cpuUsage = cpuLoad.currentLoad.toFixed(1);
+        const ramUsage = ((mem.active / mem.total) * 100).toFixed(1);
+        const gpuUsage = gpu.controllers?.[0]?.utilizationGpu?.toFixed(1) || '0.0';
 
         res.json({
-            cpu: cpu.currentLoad.toFixed(1),
-            ram: ((mem.active / mem.total) * 100).toFixed(1),
-            gpu: gpuLoad.toFixed(1)
+            cpu: cpuUsage,
+            ram: ramUsage,
+            gpu: gpuUsage
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to retrieve stats' });
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        res.status(500).json({ error: 'Error retrieving system stats.' });
     }
 });
 
+// Start server
 app.listen(PORT, () => {
-    console.log(`NZXT Dashboard running at http://localhost:${PORT}`);
+    console.log(`Dashboard running on http://localhost:${PORT}`);
 });
