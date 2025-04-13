@@ -7,9 +7,10 @@ async function fetchStats() {
         document.getElementById('ram').textContent = `${data.ram}%`;
         document.getElementById('gpu').textContent = `${data.gpu}%`;
     } catch (err) {
-        console.error('Error fetching stats:', err);
+        console.error('Failed to fetch stats:', err);
     }
 }
 
-setInterval(fetchStats, 2000); // Update every 2s
-fetchStats(); // Initial call
+// Refresh every 2 seconds
+setInterval(fetchStats, 2000);
+fetchStats(); // Initial fetch
